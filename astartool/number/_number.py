@@ -49,6 +49,17 @@ def lcm(a: int, b: int):
     return a // gcd(a, b) * b
 
 
+def gcdlcm(a: int, b: int):
+    """
+    a和b的最大公约数和最小公倍数
+    :param a:
+    :param b:
+    :return:
+    """
+    d = gcd(a, b)
+    return d, a // d * b
+
+
 def get_primes(number):
     """
     得到小于num的质数

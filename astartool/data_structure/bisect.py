@@ -47,24 +47,30 @@ def __insort_left(a, func_x, lo, hi, x, func):
     a.insert(lo, x)
 
 
-def bisect_right(a, x, lo=0, hi=None, func=None):
+def bisect_right(a, x, lo=0, hi=None, func=None, key_do_func=True):
     if lo < 0:
         raise ValueError('lo must be non-negative')
     if hi is None:
         hi = len(a)
     if func is None:
         return sys_bisect.bisect(a, x, lo, hi)
-    return __bisect_right(a, func(x), lo, hi, func)
+    if key_do_func:
+        return __bisect_right(a, func(x), lo, hi, func)
+    else:
+        return __bisect_right(a, x, lo, hi, func)
 
 
-def bisect_left(a, x, lo=0, hi=None, func=None):
+def bisect_left(a, x, lo=0, hi=None, func=None, key_do_func=True):
     if lo < 0:
         raise ValueError('lo must be non-negative')
     if hi is None:
         hi = len(a)
     if func is None:
         return sys_bisect.bisect_left(a, x, lo, hi)
-    return __bisect_left(a, func(x), lo, hi, func)
+    if key_do_func:
+        return __bisect_left(a, func(x), lo, hi, func)
+    else:
+        return __bisect_left(a, x, lo, hi, func)
 
 
 def insort_right(a, x, lo=0, hi=None, func=None):

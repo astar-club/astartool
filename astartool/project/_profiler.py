@@ -8,7 +8,11 @@ import wrapt
 
 def do_cprofile(filename):
     # 性能分析装饰器定义
+    # Graphviz 下载地址： https://www.graphviz.org/download/
+    # 配置环境变量以后
+    # pip install gprof2dot
     # gprof2dot -f pstats "D:\fcson.pfl" | "D:\Program Files\Graphviz2.38\bin\dot" -Tpng -o "D:\xxx.png"
+
     def wrapper(func):
         def profiled_func(*args, **kwargs):
             # Flag for do profiling or not.
@@ -25,4 +29,3 @@ def do_cprofile(filename):
         return profiled_func
 
     return wrapper
-

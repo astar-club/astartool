@@ -79,14 +79,14 @@ def check_symbol(pwd):
         return False
 
 
-def check_password(pwd):
+def check_password(pwd, min_length=8, *, symbol=True):
     """
     判断密码是否合法
     :param pwd:
     :return:
     """
     # 判断密码长度是否合法
-    lenOK = check_length(pwd)
+    lenOK = check_length(pwd, min_length)
     # 判断是否包含大写字母
     upperOK = check_contain_upper(pwd)
     # 判断是否包含小写字母
@@ -95,5 +95,5 @@ def check_password(pwd):
     numOK = check_contain_num(pwd)
 
     # 判断是否包含符号
-    symbolOK = check_symbol(pwd)
+    symbolOK = (not symbol) or check_symbol(pwd)
     return lenOK and upperOK and lowerOK and numOK and symbolOK
