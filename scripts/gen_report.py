@@ -11,7 +11,7 @@ version_dict = {
     'project_name': 'astartool',
     'version': astartool.__version__,
     '版本': astartool.__version__,
-    '日期': '2024-11-29',
+    '日期': '2025-10-17',
     '授权协议': LICENSE_SHORT[License.APACHE],
     '开发语言': Language.PYTHON.value,
     '操作系统': "跨平台",
@@ -25,15 +25,30 @@ version_dict = {
 content = """
 ### 新增
 
-1. project: 新增对32位系统、64位系统的判断
-2. file: excelhelper-支持导出多表格; compresshelper-新增，处理解压; filehelper-支持tar/bz2/gz格式的解压
-3. string: is_valid_number-判断是整数/小数/分数中的一种
-4. setuptool: get_complete_version-支持小于5位的元祖扩展成5位; python高版本的常量定义
+1. data_structure
 
-### 修复
+(a). mergemap-新增mergemap, 可以对字典进行自定义合并
 
-1. filehelper-文件计算哈希时异常bug
+(b). bisect-增加key_do_func参数, 可选对搜索值是否进行映射操作
+
+2. string
+
+(a). password_check-增加min_length、symbol参数，可选对特殊字符是否支持
+
+3. file
+
+(a). filehelper-新增is_file_using、release_and_delete_file、release_lock、函数, 判断文件是否锁定、解除锁并删除文件、释放锁
+
+4. exception
+
+(a). 新增FileReleaseLockException, 判断文件是否异常
+
+5. number
+
+(a). 新增gcdlcm函数，a和b的最大公约数和最小公倍数
+
+
 
 """
 
-version_release_announcement_template(version_dict, content=content, file_name="../docs/version_release.md")
+version_release_announcement_template(version_dict, content=content, file_name="../docs/release/version_release_v0.1.4.md")
