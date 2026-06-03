@@ -67,6 +67,7 @@ def namelist(filepath: Union[str, pathlib.Path], sort: bool=True):
             li = z.namelist()
             if sort:
                 li.sort()
+            z.close()
             return li
         elif compression_type == CompressionType.RAR:
             z = rarfile.RarFile(filepath, "r")
@@ -74,36 +75,42 @@ def namelist(filepath: Union[str, pathlib.Path], sort: bool=True):
             li = [each for each in li if not each.endswith("/")]
             if sort:
                 li.sort()
+            z.close()
             return li
         elif compression_type == CompressionType.TAR:
             z = tarfile.open(filepath, "r")
             li = [item.name for item in z.getmembers() if not item.isdir()]
             if sort:
                 li.sort()
+            z.close()
             return li
         elif compression_type == CompressionType.TAR_GZ:
             z = tarfile.open(filepath, "r:gz")
             li = [item.name for item in z.getmembers() if not item.isdir()]
             if sort:
                 li.sort()
+            z.close()
             return li
         elif compression_type == CompressionType.TAR_BZ2:
             z = tarfile.open(filepath, "r:bz2")
             li = [item.name for item in z.getmembers() if not item.isdir()]
             if sort:
                 li.sort()
+            z.close()
             return li
         elif compression_type == CompressionType.TAR_XZ:
             z = tarfile.open(filepath, "r:xz")
             li = [item.name for item in z.getmembers() if not item.isdir()]
             if sort:
                 li.sort()
+            z.close()
             return li
         elif compression_type == CompressionType.RAR:
             z = rarfile.RarFile(filepath)
             li = z.namelist()
             if sort:
                 li.sort()
+            z.close()
             return li
         else:
             raise ParameterValueError("Error: File type `{}` is not supported.".format(compression_type))

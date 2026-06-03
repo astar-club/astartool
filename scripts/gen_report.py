@@ -11,7 +11,7 @@ version_dict = {
     'project_name': 'astartool',
     'version': astartool.__version__,
     '版本': astartool.__version__,
-    '日期': '2025-10-17',
+    '日期': '2026-06-03',
     '授权协议': LICENSE_SHORT[License.APACHE],
     '开发语言': Language.PYTHON.value,
     '操作系统': "跨平台",
@@ -27,28 +27,18 @@ content = """
 
 1. data_structure
 
-(a). mergemap-新增mergemap, 可以对字典进行自定义合并
-
-(b). bisect-增加key_do_func参数, 可选对搜索值是否进行映射操作
+(a). relation-新增关系映射，支持有序/无序、加权/非加权
 
 2. string
 
-(a). password_check-增加min_length、symbol参数，可选对特殊字符是否支持
+(a). 对正则表达式进行优化
 
-3. file
+3. setuptool
 
-(a). filehelper-新增is_file_using、release_and_delete_file、release_lock、函数, 判断文件是否锁定、解除锁并删除文件、释放锁
-
-4. exception
-
-(a). 新增FileReleaseLockException, 判断文件是否异常
-
-5. number
-
-(a). 新增gcdlcm函数，a和b的最大公约数和最小公倍数
+(a). 由于3.12弃用distutils，因此移除在3.10以上版本_version.py中对distutils的依赖,转而依赖setuptools工具包
 
 
 
 """
 
-version_release_announcement_template(version_dict, content=content, file_name="../docs/release/version_release_v0.1.4.md")
+version_release_announcement_template(version_dict, content=content, file_name="../docs/release/version_release_v0.2.md")

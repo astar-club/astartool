@@ -3,10 +3,10 @@
 
 from astartool.string import is_url, has_Chinese, is_email
 
-from unittest import TestCase
+import unittest
 
 
-class StringTestCase(TestCase):
+class TestString(unittest.TestCase):
     def test_is_url(self):
         url1 = "www.baidu.com"
         url2 = "www.snowland.ltd"

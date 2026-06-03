@@ -17,3 +17,4 @@ from astartool.data_structure.mergemap import MergeMap
 from astartool.data_structure.heap import Heap
 from astartool.data_structure.bisect import *
 from astartool.data_structure.union_find import UnionFind
+from astartool.data_structure.relation import RelationMap

@@ -6,7 +6,6 @@ import functools
 import os
 import subprocess
 import sys
-from distutils.version import LooseVersion
 
 # Private, stable API for detecting the Python version. PYXY means "Python X.Y
 # or later". So that third-party apps can use these values, each constant
@@ -22,6 +21,12 @@ PY312 = sys.version_info >= (3, 12)
 PY313 = sys.version_info >= (3, 13)
 PY314 = sys.version_info >= (3, 14)
 PY315 = sys.version_info >= (3, 15)
+
+
+if PY310:
+    from setuptools._distutils.version import LooseVersion
+else:
+    from distutils.version import LooseVersion
 
 
 def get_version(version=None):
