@@ -7,7 +7,6 @@
 [![download](https://img.shields.io/pypi/dm/astartool.svg)](https://pypi.org/project/astartool)
 [![wheel](https://img.shields.io/pypi/wheel/astartool.svg)](https://pypi.python.org/pypi/astartool)
 [![CodeFactor](https://www.codefactor.io/repository/github/astarchen/astartool/badge/main)](https://www.codefactor.io/repository/github/astarchen/astartool/overview/main)
-![status](https://img.shields.io/pypi/status/astartool.svg)
 
 A.Star私房工具包
 
@@ -18,8 +17,8 @@ A.Star私房工具包
 ## [0. 写在最前](home.md)
 ## 1. 函数手册
 
-- [v0.1](v0.1.md)
-- [v0.2](v0.2.md)
+- [v0.1](api/v0.1.md)
+- [v0.2](api/v0.2.md)
 
 ## 2. 贡献代码
 

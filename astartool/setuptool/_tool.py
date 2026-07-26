@@ -55,7 +55,7 @@ def __dialog_setup():
 
 
 def setup(**attrs):
-    version = attrs['version']
+    version = attrs['api']
     if isinstance(version, tuple):
         if len(version) > 3:
             if version[3] not in ['F', 'f', 'final', 'Final']:

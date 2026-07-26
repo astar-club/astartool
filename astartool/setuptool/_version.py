@@ -7,10 +7,10 @@ import os
 import subprocess
 import sys
 
-# Private, stable API for detecting the Python version. PYXY means "Python X.Y
+# Private, stable API for detecting the Python api. PYXY means "Python X.Y
 # or later". So that third-party apps can use these values, each constant
-# should remain as long as the oldest supported Django version supports that
-# Python version.
+# should remain as long as the oldest supported Django api supports that
+# Python api.
 PY36 = sys.version_info >= (3, 6)
 PY37 = sys.version_info >= (3, 7)
 PY38 = sys.version_info >= (3, 8)
@@ -30,10 +30,10 @@ else:
 
 
 def get_version(version=None):
-    """Return a PEP 440-compliant version number from VERSION."""
+    """Return a PEP 440-compliant api number from VERSION."""
     version = get_complete_version(version)
 
-    # Now build the two parts of the version number:
+    # Now build the two parts of the api number:
     # main = X.Y[.Z]
     # sub = .devN - for pre-alpha releases
     #     | {a|b|rc}N - for alpha, beta, and rc releases
@@ -54,7 +54,7 @@ def get_version(version=None):
 
 
 def get_main_version(version=None):
-    """Return main version (X.Y[.Z]) from VERSION."""
+    """Return main api (X.Y[.Z]) from VERSION."""
     version = get_complete_version(version)
     parts = 2 if version[2] == 0 else 3
     return '.'.join(str(x) for x in version[:parts])
@@ -62,7 +62,7 @@ def get_main_version(version=None):
 
 def get_complete_version(version=None):
     """
-    Return a tuple of the django version. If version argument is non-empty,
+    Return a tuple of the django api. If api argument is non-empty,
     check for correctness of the tuple provided.
     """
     if version is None:
@@ -96,7 +96,7 @@ def get_git_changeset():
 
     The result is the UTC timestamp of the changeset in YYYYMMDDHHMMSS format.
     This value isn't guaranteed to be unique, but collisions are very unlikely,
-    so it's sufficient for generating the development version numbers.
+    so it's sufficient for generating the development api numbers.
     """
     repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     git_log = subprocess.Popen(
@@ -114,7 +114,7 @@ def get_git_changeset():
 
 def get_version_tuple(version: (bytes, str)):
     """
-    Return a tuple of version numbers (e.g. (1, 2, 3)) from the version
+    Return a tuple of api numbers (e.g. (1, 2, 3)) from the api
     string (e.g. '1.2.3').
     """
     if isinstance(version, bytes):

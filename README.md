@@ -4,11 +4,11 @@
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FASTARCHEN%2Fastartool.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FASTARCHEN%2Fastartool?ref=badge_shield)
 [![gitee](https://gitee.com/hoops/astartool/badge/star.svg)](https://gitee.com/hoops/astartool/stargazers)
 [![github](https://img.shields.io/github/stars/ASTARCHEN/astartool)](https://img.shields.io/github/stars/ASTARCHEN/astartool)
-[![download](https://img.shields.io/pypi/dm/astartool.svg)](https://pypi.org/project/astartool)
+[![download](https://img.shields.io/pypi/dm/astartool.svg?cacheSeconds=86400)](https://pypi.org/project/astartool)
 [![wheel](https://img.shields.io/pypi/wheel/astartool.svg)](https://pypi.python.org/pypi/astartool)
 [![CodeFactor](https://www.codefactor.io/repository/github/astarchen/astartool/badge/main)](https://www.codefactor.io/repository/github/astarchen/astartool/overview/main)
 ![status](https://img.shields.io/pypi/status/astartool.svg)
-[![wiki](https://img.shields.io/badge/wiki-v0.1.0-green)](https://github.com/ASTARCHEN/astartool/wiki)
+[![wiki](https://img.shields.io/badge/wiki-v0.2.0-green)](https://github.com/ASTARCHEN/astartool/wiki)
 
 A.Star私房工具包
 

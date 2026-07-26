@@ -119,4 +119,4 @@ def random_ip(version='ipv4'):
         else:
             raise ValueError('Version is not supported now')
 
-    raise ValueError('type of version is in (str, int)')
+    raise ValueError('type of api is in (str, int)')

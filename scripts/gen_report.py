@@ -9,7 +9,7 @@ import astartool
 
 version_dict = {
     'project_name': 'astartool',
-    'version': astartool.__version__,
+    'api': astartool.__version__,
     '版本': astartool.__version__,
     '日期': '2026-06-03',
     '授权协议': LICENSE_SHORT[License.APACHE],

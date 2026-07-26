@@ -21,8 +21,8 @@ hex_string_upper = '0123456789ABCDFEF'
 alnum_string = '0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
 alpha_string = 'qwertyuiopasdfghjklzxcvbnm'
 digit_string = '0123456789'
-password_allowed_string = '1234567890qwertyuiopasdfghjklzxcvbnm!@#$%^*()'
-password_allowed_string_upper = '1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM!@#$%^*()'
+password_allowed_string = '1234567890qwertyuiopasdfghjklzxcvbnm!@#$%^*().'
+password_allowed_string_upper = '1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM!@#$%^*().'
 hex_allowed_string = '0123456789ABCDEFabcdef'
 
 BIT_BLOCK_H = [0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE, 0xFF]
@@ -124,7 +124,7 @@ list_ignore = [
     'docs/_build/',
     'target/',
     '.ipynb_checkpoints',
-    '.python-version',
+    '.python-api',
     'celerybeat-schedule',
     '.env',
     '.venv',
