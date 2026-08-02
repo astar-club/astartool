@@ -55,18 +55,23 @@ def __dialog_setup():
 
 
 def setup(**attrs):
-    version = attrs['api']
-    if isinstance(version, tuple):
-        if len(version) > 3:
-            if version[3] not in ['F', 'f', 'final', 'Final']:
-                show_text = "Version is not final, do you really wants to setup it?\n[Y] yes.\n[N] no."
-                ok_flag = lambda inp: inp[0] in ['Y', 'y']
-                yes_callback = None
-                no_callback = lambda: sys.exit()
-                alert_dialog(ok_flag,
-                             cancel_flag=True,
-                             show_text=show_text,
-                             okay_callback=yes_callback,
-                             cancel_callback=no_callback)
+    # Accept both the legacy ``api`` key (a version tuple, used by older
+    # callers) and the standard ``version`` key (string or tuple). The custom
+    # "non-final version" confirmation only applies when an ``api`` tuple with
+    # a status segment is supplied; otherwise we delegate straight to
+    # setuptools so the standard build flow (pip install -e . / setup.py
+    # develop) works without requiring the legacy ``api`` argument.
+    version = attrs.get('api', attrs.get('version'))
+    if isinstance(version, tuple) and len(version) > 3:
+        if version[3] not in ['F', 'f', 'final', 'Final']:
+            show_text = "Version is not final, do you really wants to setup it?\n[Y] yes.\n[N] no."
+            ok_flag = lambda inp: inp[0] in ['Y', 'y']
+            yes_callback = None
+            no_callback = lambda: sys.exit()
+            alert_dialog(ok_flag,
+                         cancel_flag=True,
+                         show_text=show_text,
+                         okay_callback=yes_callback,
+                         cancel_callback=no_callback)
 
     return _setup(**attrs)
