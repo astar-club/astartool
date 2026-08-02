@@ -17,6 +17,7 @@ import re
 import sys
 import warnings
 from collections import OrderedDict
+from typing import Tuple
 
 from astartool.data_structure.keymap import KeyMap
 from astartool.common import list_allow_extension, list_ignore, item_field, item_foreignkey
@@ -177,7 +178,7 @@ def project_to_lines(src_project,
 
 
 def auto_title_md(to_file: str,
-                  version: (tuple, str) = (0, 1, 0, 'final', 0),
+                  version: Tuple[tuple, str] = (0, 1, 0, 'final', 0),
                   datetime=datetime.datetime.now(),
                   title='自动生成数据库模板头',
                   auth='ASTARTOOL ROBOT',
@@ -237,7 +238,7 @@ def auto_title_rst(to_file: str,
 
 
 def auto_title(to_file: str,
-               version: (tuple, str) = (0, 1, 0, 'final', 0),
+               version: Tuple[tuple, str] = (0, 1, 0, 'final', 0),
                datetime=datetime.datetime.now(),
                title='自动生成数据库模板头',
                auth='ASTARTOOL ROBOT',
@@ -351,7 +352,7 @@ def model_to_dict(model_path, encoding='utf-8'):
 
 
 def model_to_doc(model_path, to_file=None,
-                 version: (tuple, str) = (0, 0, 1, 'final', 0),
+                 version: Tuple[tuple, str] = (0, 0, 1, 'final', 0),
                  datetime=datetime.datetime.now(),
                  title='自动生成数据库模板头',
                  auth='ASTARTOOL ROBOT',
@@ -394,7 +395,7 @@ def model_to_doc(model_path, to_file=None,
 
 
 def url_to_interface_template(url_path, to_file=None,
-                              version: (tuple, str) = (0, 0, 1, 'final', 0),
+                              version: Tuple[tuple, str] = (0, 0, 1, 'final', 0),
                               datetime=datetime.datetime.now(),
                               title='自动生成interface模板头',
                               auth='ASTARTOOL ROBOT',
