@@ -12,7 +12,7 @@ __author__ = 'A.Star'
 
 from astartool.common import hex_allowed_string, BIT_EACH
 import numpy as np
-from random import randint
+import secrets
 
 
 def ishex(s: str):
@@ -103,8 +103,10 @@ def is_prime(number: (str, int), itor=10):
     """
     if not isinstance(number, int):
         number = int(number)
+    if number < 2:
+        return False
     for i in range(itor):
-        a = randint(1, number - 1)
+        a = 1 + secrets.randbelow(number - 1)
         if pow(a, number - 1, number) != 1:
             return False
     return True
