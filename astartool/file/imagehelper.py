@@ -14,8 +14,6 @@ import base64
 import re
 from io import BytesIO
 
-from PIL import Image
-
 
 def base64_to_image(base64_str, image_path=None):
     """
@@ -24,6 +22,14 @@ def base64_to_image(base64_str, image_path=None):
     :param image_path:
     :return:
     """
+    # Pillow (PIL) is an optional dependency, imported lazily at runtime
+    try:
+        from PIL import Image
+    except ImportError:
+        raise ImportError(
+            "Pillow is required for base64_to_image. Install it via "
+            "`pip install pillow` or `pip install astartool[optional]`."
+        )
     base64_data = re.sub('^data:image/.+;base64,', '', base64_str)
     byte_data = base64.b64decode(base64_data)
     image_data = BytesIO(byte_data)

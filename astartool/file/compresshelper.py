@@ -15,9 +15,24 @@ import tarfile
 import zipfile
 from typing import Union
 
-import rarfile
-
 from astartool.error import ParameterValueError, ParameterTypeError
+
+
+def _require_rarfile():
+    """
+    Lazily import the optional ``rarfile`` dependency.
+
+    :raises ImportError: if ``rarfile`` is not installed.
+    :return: the ``rarfile`` module.
+    """
+    try:
+        import rarfile
+    except ImportError:
+        raise ImportError(
+            "rarfile is required to handle RAR archives. Install it via "
+            "`pip install rarfile` or `pip install astartool[optional]`."
+        )
+    return rarfile
 
 
 class CompressionType(enum.Enum):
@@ -70,6 +85,7 @@ def namelist(filepath: Union[str, pathlib.Path], sort: bool=True):
             z.close()
             return li
         elif compression_type == CompressionType.RAR:
+            rarfile = _require_rarfile()
             z = rarfile.RarFile(filepath, "r")
             li = z.namelist()
             li = [each for each in li if not each.endswith("/")]
@@ -106,6 +122,7 @@ def namelist(filepath: Union[str, pathlib.Path], sort: bool=True):
             z.close()
             return li
         elif compression_type == CompressionType.RAR:
+            rarfile = _require_rarfile()
             z = rarfile.RarFile(filepath)
             li = z.namelist()
             if sort:
@@ -152,6 +169,7 @@ def extractall_from_rar(rar_path, target_dir, file_names=None, password=None, en
         raise ParameterTypeError("Error type: Type of `password` must be string or bytes.")
     if not os.path.exists(target_dir):
         os.makedirs(target_dir)
+    rarfile = _require_rarfile()
     with rarfile.RarFile(rar_path, 'r') as r:
         r.extractall(target_dir, file_names, password)
 
