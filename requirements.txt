@@ -1,9 +1,22 @@
-numpy>=1.0.1
+# Required dependencies (always installed)
 snowland-smx>=0.3.1
-rarfile
-xlwt
-pillow
 six
 wrapt
-xlrd
 setuptools
+
+# Optional dependencies (only needed for specific features)
+# Install via `pip install astartool[optional]`, or uncomment below to force-install
+# numpy>=1.0.1      # astartool.number: prime_factorization / equals_zero*
+# rarfile           # astartool.file.compresshelper: RAR archive support
+# xlwt              # astartool.file.excelhelper: to_excel (.xls)
+# xlrd              # astartool.file.excelhelper: to_excel (xls reading)
+# openpyxl          # astartool.file.excelhelper: to_excel (.xlsx)
+# pillow            # astartool.file.imagehelper: base64_to_image
+
+[optional]
+numpy>=1.0.1
+rarfile
+xlwt
+xlrd
+openpyxl
+pillow

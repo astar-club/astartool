@@ -11,7 +11,6 @@
 __author__ = 'A.Star'
 
 from astartool.common import hex_allowed_string, BIT_EACH
-import numpy as np
 import secrets
 
 
@@ -83,6 +82,15 @@ def prime_factorization(number: int, li_number=None):
     :return:
     """
     if li_number is None:
+        # numpy is an optional dependency, imported lazily at runtime
+        try:
+            import numpy as np
+        except ImportError:
+            raise ImportError(
+                "numpy is required for prime_factorization with default "
+                "prime list. Install it via `pip install numpy` or "
+                "`pip install astartool[optional]`."
+            )
         li_number = get_primes(int(np.sqrt(number)) + 1)
     li = []
     for k in li_number:
@@ -133,7 +141,11 @@ def equals_zero(matrix, eps=1e-8):
     :return:
     """
     assert eps >= 0, "eps 应该大于0"
-    if isinstance(matrix, np.ndarray):
+    try:
+        import numpy as np
+    except ImportError:
+        np = None
+    if np is not None and isinstance(matrix, np.ndarray):
         return (-eps < matrix) & (matrix < eps)
     if isinstance(matrix, list):
         return [-eps < each_x < eps for each_x in matrix]
@@ -149,6 +161,14 @@ def equals_zero_all(matrix, eps=1e-8):
     :param eps:
     :return:
     """
+    # numpy is an optional dependency, imported lazily at runtime
+    try:
+        import numpy as np
+    except ImportError:
+        raise ImportError(
+            "numpy is required for equals_zero_all. Install it via "
+            "`pip install numpy` or `pip install astartool[optional]`."
+        )
     return np.all(equals_zero(matrix, eps=eps))
 
 
@@ -159,4 +179,12 @@ def equals_zero_any(matrix, eps=1e-8):
     :param eps:
     :return:
     """
+    # numpy is an optional dependency, imported lazily at runtime
+    try:
+        import numpy as np
+    except ImportError:
+        raise ImportError(
+            "numpy is required for equals_zero_any. Install it via "
+            "`pip install numpy` or `pip install astartool[optional]`."
+        )
     return np.any(equals_zero(matrix, eps=eps))

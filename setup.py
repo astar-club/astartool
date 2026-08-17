@@ -46,5 +46,8 @@ setup(
         'Programming Language :: Python :: 3.13',
         'Topic :: Software Development :: Libraries'
     ],
-    install_requires=load_install_requires()
+    install_requires=load_install_requires(),
+    extras_require={
+        'optional': load_install_requires(extra='optional'),
+    }
 )
