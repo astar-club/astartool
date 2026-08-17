@@ -8,7 +8,7 @@ from astartool.file.compresshelper import namelist
 
 
 def read_file(file_path: str, start: str = "0", end: str = "end",
-              limit: int = 0) -> str:
+              limit: int = 0, encoding="utf-8") -> str:
     """Read a text file inside the workspace and return its content.
 
     :param file_path: Path to the text file to read.
@@ -23,13 +23,17 @@ def read_file(file_path: str, start: str = "0", end: str = "end",
         raise FileOptError(
             "not_readable", f"not a readable file in workspace: {file_path}")
 
-    with open(p, "r", encoding="utf-8", errors="replace") as f:
+    with open(p, "r", encoding=encoding, errors="replace") as f:
         lines = f.readlines()
     start_line = int(start)
     end_line = int(end) if end != "end" else len(lines)
     selected = lines[start_line:end_line]
     if limit and limit > 0:
         selected = selected[:limit]
+    # ``"".join`` preserves original line endings (incl. the trailing newline),
+    # so a full-file read (start="0", end="end", limit=0) yields exactly the
+    # same string as ``Path.read_text()`` / ``file.read()``. This keeps the
+    # return consistent with ``astartool.setuptool._tool.read_file``.
     return "".join(selected)
 
 

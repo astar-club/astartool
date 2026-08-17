@@ -21,31 +21,58 @@ from astartool.project import alert_dialog
 osp = os.path
 
 
-def load_install_requires(filepath='requirements.txt', encoding='utf-8'):
+def load_install_requires(filepath='requirements.txt', encoding='utf-8', extra=None):
     """
     通过filepath生成setup.py的install_requires
-    :param filepath:
-    :param encoding:
-    :return:
+
+    :param filepath: requirements 文件路径
+    :param encoding: 文件编码
+    :param extra: 可选依赖分组名（如 ``"optional"``）；为 ``None`` 时读取主段，
+        遇到 ``[section]`` 标题后停止（除非 section 与 extra 匹配）
+    :return: 依赖列表
+    :rtype: list
     """
     file = pathlib.Path(filepath)
-    if file.exists():
-        with file.open('r', encoding=encoding) as f:
-            lines = f.readlines()
-        requirements = (line.split('#')[0].strip() for line in lines if not line.strip().startswith('#') and not line.startswith('-'))
-        return [req for req in requirements if requirements]
-    else:
+    if not file.exists():
         raise FileNotFoundError("file not found")
+    with file.open('r', encoding=encoding) as f:
+        lines = f.readlines()
+
+    target = extra  # None 表示读取主段
+    requirements = []
+    in_target = (target is None)
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith('[') and stripped.endswith(']'):
+            section = stripped[1:-1].strip()
+            in_target = (section == target)
+            continue
+        if not in_target:
+            continue
+        if stripped.startswith('#') or stripped.startswith('-'):
+            continue
+        req = stripped.split('#')[0].strip()
+        if req:
+            requirements.append(req)
+    return requirements
 
 
 def read_file(file_name='README.md', encoding='utf-8'):
     """
     读取本地文件
+
+    委托给 :func:`astartool.file.file_opt.read_file` 以保证两者返回一致
+    （默认参数下即整文件读取，返回与 ``Path.read_text()`` 相同的字符串）。
+
     :param file_name: 文件名
     :param encoding: 文件编码，默认utf-8
-    :return:
+    :return: 文件文本内容
+    :rtype: str
     """
-    return pathlib.Path(file_name).open('r', encoding=encoding).read()
+    from astartool.file.file_opt import read_file as _read_file
+    return _read_file(file_path=file_name, encoding=encoding)
 
 
 def __dialog_setup():
