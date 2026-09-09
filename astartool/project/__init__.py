@@ -10,9 +10,11 @@
 
 __author__ = 'A.Star'
 
-from astartool.project._project import *
+
+from astartool.project._decorators import *
 from astartool.project._log import *
 from astartool.project._platform import *
-from astartool.project._time import *
 from astartool.project._profiler import *
+from astartool.project._project import *
 from astartool.project._project_opt import *
+from astartool.project._time import *
