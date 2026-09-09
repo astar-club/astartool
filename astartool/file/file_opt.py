@@ -7,50 +7,170 @@ from astartool.error import ParameterValueError
 from astartool.file.compresshelper import namelist
 
 
+def read_large_file(file_path: str, chunk_size: int = 8 * 1024 * 1024,
+                    mode="str", encoding="utf-8"):
+    """流式读取大文件，按分块返回内容，避免一次性将全部数据载入内存。
+
+    与 :func:`read_file` 不同，本函数不读取完整文件后再切片，而是按
+    ``chunk_size`` 分块（流式）读取。``mode="str"`` 时按文本模式逐块读取
+    并返回生成器（每次产出 `str`）；其他 mode 按二进制模式读取并返回
+    生成器（每次产出 `bytes`）。
+
+    适用于超大文本/二进制文件的增量处理（如逐块分析、转发），调用方
+    通过遍历返回的生成器按需消费数据，无需在内存中持有整份内容。
+
+    :param file_path: 待读取的文件路径。
+    :param chunk_size: 单次读取的字节数（文本模式下按字符读取同样大小）。
+    :param mode: ``"str"`` 按文本读取，其他值（如 ``"bytes"``）按二进制读取。
+    :param encoding: 文本模式下的文件编码。
+    :return: 一个生成器，逐个产出分块内容（str 或 bytes）。
+    :raises FileOptError: 文件不可读或读取过程中出错。
+    """
+    p = Path(file_path)
+    if not p.is_file():
+        raise FileOptError("not_a_file", "Path is not a regular file: %s" % p)
+    try:
+        if mode == "str":
+            with p.open("r", encoding=encoding, errors="replace") as f:
+                while True:
+                    chunk = f.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+        else:
+            with p.open("rb") as f:
+                while True:
+                    chunk = f.read(chunk_size)
+                    if not chunk:
+                        break
+                    yield chunk
+    except OSError as e:
+        raise FileOptError("read_error", "Failed to read large file %s: %s" % (p, e))
+
+
+def write_large_file(file_path: str, data, chunk_size: int = 8 * 1024 * 1024,
+                     mode="str", encoding="utf-8") -> int:
+    """流式写入大文件，按分块写入数据，避免一次性持有全部内容。
+
+    与 :func:`write_file` 不同，本函数接受一个可迭代对象（生成器/列表等）
+    作为 ``data``，按 ``chunk_size`` 分块写入磁盘；也兼容直接传入单一的
+    ``str`` / ``bytes``。写入前会确保父目录存在。返回写入的字节数（文本
+    模式按 ``encoding`` 编码后计算，二进制模式直接累加）。
+
+    适用于超大内容的增量写出（如逐块生成、流式下载落盘）。
+
+    :param file_path: 目标文件路径。
+    :param data: 待写入的数据，可为 str/bytes，或产生 str/bytes 的可迭代对象。
+    :param chunk_size: 单次写入的字节数（仅当 ``data`` 为单一 str/bytes 时用于分块）。
+    :param mode: ``"str"`` 按文本写入，其他值按二进制写入。
+    :param encoding: 文本模式下的文件编码。
+    :return: 实际写入的字节数。
+    :raises FileOptError: 路径非法或写入过程中出错。
+    """
+    p = Path(file_path)
+    try:
+        p.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        raise FileOptError("mkdir_error", "Failed to create dir for %s: %s" % (p, e))
+
+    total = 0
+    try:
+        # 兼容单一 str/bytes：包装为可迭代对象后再统一处理
+        if isinstance(data, (str, bytes, bytearray)):
+            chunks = (data[i:i + chunk_size]
+                      for i in range(0, len(data), chunk_size))
+        else:
+            chunks = data
+
+        if mode == "str":
+            with open(p, "w", encoding=encoding) as f:
+                for chunk in chunks:
+                    if isinstance(chunk, bytes):
+                        chunk = chunk.decode(encoding, errors="replace")
+                    f.write(chunk)
+                    total += len(chunk.encode(encoding))
+        else:
+            with open(p, "wb") as f:
+                for chunk in chunks:
+                    if isinstance(chunk, str):
+                        chunk = chunk.encode(encoding)
+                    f.write(chunk)
+                    total += len(chunk)
+    except OSError as e:
+        raise FileOptError("write_error", "Failed to write large file %s: %s" % (p, e))
+    return total
+
+
 def read_file(file_path: str, start: str = "0", end: str = "end",
-              limit: int = 0, encoding="utf-8") -> str:
+              limit: int = 0, mode="str", encoding="utf-8") -> Union[str, bytes]:
     """Read a text file inside the workspace and return its content.
 
     :param file_path: Path to the text file to read.
     :param start: 0-based first line to include (default ``"0"``).
     :param end: 0-based last line (exclusive), or ``"end"`` for the whole tail.
+    :param mode: Output content mode; ``"str"`` reads as text (default),
+        any other value (e.g. ``"bytes"``) reads as binary.
     :param limit: Max number of returned lines (``0`` = no extra cap).
-    :return: The selected file content as a string.
-    :rtype: str
+    :param encoding: Encoding of file (default ``"utf-8"``).
+    :return: The selected file content; a ``str`` when ``mode="str"``,
+        otherwise ``bytes``.
+    :rtype: str or bytes
     """
     p = Path(file_path)
     if not p.is_file():
         raise FileOptError(
             "not_readable", f"not a readable file in workspace: {file_path}")
 
-    with open(p, "r", encoding=encoding, errors="replace") as f:
-        lines = f.readlines()
-    start_line = int(start)
-    end_line = int(end) if end != "end" else len(lines)
-    selected = lines[start_line:end_line]
-    if limit and limit > 0:
-        selected = selected[:limit]
-    # ``"".join`` preserves original line endings (incl. the trailing newline),
-    # so a full-file read (start="0", end="end", limit=0) yields exactly the
-    # same string as ``Path.read_text()`` / ``file.read()``. This keeps the
-    # return consistent with ``astartool.setuptool._tool.read_file``.
-    return "".join(selected)
+    if mode == "str":
+        with open(p, "r", encoding=encoding, errors="replace") as f:
+            lines = f.readlines()
+        start_line = int(start)
+        end_line = int(end) if end != "end" else len(lines)
+        selected = lines[start_line:end_line]
+        if limit and limit > 0:
+            selected = selected[:limit]
+        # ``"".join`` preserves original line endings (incl. the trailing newline),
+        # so a full-file read (start="0", end="end", limit=0) yields exactly the
+        # same string as ``Path.read_text()`` / ``file.read()``. This keeps the
+        # return consistent with ``astartool.setuptool._tool.read_file``.
+        return "".join(selected)
+    else:
+        with open(p, "rb") as f:
+            lines = f.read()
+        return lines
 
 
-def write_file(file_path: str, content: str) -> int:
+def write_file(file_path: str, content: Union[str, bytes, bytearray], mode="str", encoding="utf-8") -> int:
     """Overwrite a workspace file with ``content`` (full write).
 
-    Parent directories are created as needed.
+    Parent directories are created as needed. ``mode="str"`` 时按文本写入
+    （``content`` 应为 ``str``，返回写入字符数）；其他值（如 ``"bytes"``）
+    时按二进制写入（``content`` 应为 ``bytes``/``bytearray``，返回写入字节数）。
 
     :param file_path: Path to the file to write.
-    :param content: The full text content to write.
-    :return: The number of characters written.
+    :param content: The full content to write (``str`` in text mode, ``bytes``/``bytearray`` in binary mode).
+    :param mode: ``"str"`` 按文本写入，其他值按二进制写入。
+    :param encoding: 文本模式下的文件编码。
+    :return: 文本模式返回字符数，二进制模式返回字节数。
     :rtype: int
+    :raises FileOptError: 二进制模式下 ``content`` 非 bytes，或写入失败。
     """
     p = Path(file_path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(content, encoding="utf-8")
-    return len(content)
+    if mode == "str":
+        if not isinstance(content, str):
+            raise FileOptError(
+                "type_error",
+                "content must be str in text mode, got %s" % type(content).__name__)
+        p.write_text(content, encoding=encoding)
+        return len(content)
+    else:
+        if not isinstance(content, (bytes, bytearray)):
+            raise FileOptError(
+                "type_error",
+                "content must be bytes/bytearray in binary mode, got %s" % type(content).__name__)
+        p.write_bytes(bytes(content))
+        return len(content)
 
 
 def list_dir(path: str = ".") -> list:
