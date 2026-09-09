@@ -206,43 +206,92 @@ def require_optional_import(module_name, error_message=None, exception=ImportErr
     return decorator
 
 
-def std_logging(level=logging.INFO):
+def singleton(cls):
     """
-    日志记录
-    :param level:
-    :return:
+    单例装饰器：保证被装饰的类在整个进程内只存在一个实例。
+
+    首次以某组构造参数（``args`` / ``kwargs``）实例化时创建对象并缓存；
+    之后以**等价**的构造参数再次实例化时直接返回已缓存的同一实例。
+
+    缓存 key 通过 :func:`inspect.signature` 将位置参数与关键字参数绑定到
+    ``__init__`` 签名上，归一化为一份有序的 ``(参数名, 值)`` 元组。因此
+    以下三种写法被视作同一实例::
+
+        Point(1, y=2)
+        Point(1, 2)
+        Point(**{"x": 1, "y": 2})
+
+    不同构造参数（归一化后不同）则各自对应独立的单例。
+
+    适用于 ``wrapt`` 体系下的类装饰，且对 ``__init__`` 无侵入（仅拦截实例化）。
+
+    :param cls: 被装饰的类
+    :return: 包装后的类，调用时返回单例实例
+
+    示例::
+
+        @singleton
+        class Config(object):
+            def __init__(self, path):
+                self.path = path
+
+        a = Config("/etc/a.conf")
+        b = Config("/etc/a.conf")   # 与 a 是同一对象
+        c = Config("/etc/b.conf")   # 不同参数 -> 另一个单例
+        assert a is b
+        assert a is not c
     """
-    int_flag = level in LOG_LEVEL_INT
-    assert int_flag or level in LOG_LEVEL_STR
-    if int_flag:
-        level = LOG_LEVEL_MAP_INT2STR[level]
+    import inspect
+
+    cls.__singleton_instances__ = {}
+    try:
+        _sig = inspect.signature(cls.__init__)
+    except (ValueError, TypeError):
+        _sig = None
+
+    def _hashable(value):
+        # 将任意参数值规整为可哈希形式，使 dict/list 等也能作为缓存 key
+        try:
+            hash(value)
+        except TypeError:
+            pass
+        else:
+            return value
+        if isinstance(value, dict):
+            return tuple(sorted(
+                (k, _hashable(v)) for k, v in value.items()
+            ))
+        if isinstance(value, (list, tuple, set, frozenset)):
+            return tuple(_hashable(v) for v in value)
+        # 其余不可哈希类型：退化为 (类型, repr) 以保证可哈希且互异
+        return (type(value).__name__, repr(value))
+
+    def _make_key(args, kwargs):
+        # 将 args/kwargs 绑定到 __init__ 签名，得到统一的 (名, 值) 序列
+        if _sig is None:
+            return (tuple(_hashable(a) for a in args),
+                    frozenset((k, _hashable(v)) for k, v in kwargs.items()))
+        try:
+            bound = _sig.bind(None, *args, **kwargs)
+            bound.apply_defaults()
+        except TypeError:
+            # 参数无法绑定（如 *args/**kwargs 变更），退回原始缓存
+            return (tuple(_hashable(a) for a in args),
+                    frozenset((k, _hashable(v)) for k, v in kwargs.items()))
+        # 按签名顺序取参，并跳过第一个参数（self），值规整为可哈希形式
+        param_names = list(_sig.parameters)[1:]
+        return tuple(
+            (name, _hashable(bound.arguments[name])) for name in param_names
+        )
 
     @wrapt.decorator
     def wrapper(wrapped, instance, args, kwargs):
-        print("[{}]: enter {}()".format(level, wrapped.__name__))
-        f = wrapped(*args, **kwargs)
-        print("[{}]: exit {}()".format(level, wrapped.__name__))
-        return f
+        # wrapped 即 cls；此处 instance 恒为 None（类调用）
+        key = _make_key(args, kwargs)
+        cache = wrapped.__singleton_instances__
+        if key not in cache:
+            cache[key] = wrapped.__wrapped__(*args, **kwargs) \
+                if hasattr(wrapped, "__wrapped__") else wrapped(*args, **kwargs)
+        return cache[key]
 
-    return wrapper
-
-
-def file_logging(level=logging.INFO):
-    """
-    日志记录
-    :param level:
-    :return:
-    """
-    str_flag = level in LOG_LEVEL_STR
-    assert str_flag or level in LOG_LEVEL_INT
-    if str_flag:
-        level = LOG_LEVEL_MAP_STR2INT[level]
-
-    @wrapt.decorator
-    def wrapper(wrapped, instance, args, kwargs):
-        logging.log(level, "enter {}()".format(wrapped.__name__))
-        f = wrapped(*args, **kwargs)
-        logging.log(level, "exit {}()".format(wrapped.__name__))
-        return f
-
-    return wrapper
+    return wrapper(cls)
