@@ -7,6 +7,7 @@ from astartool.project._decorators import (
     require_optional_import,
     deprecated_version,
     VersionDeprecatedError,
+    singleton,
 )
 
 
@@ -79,29 +80,29 @@ class TestRequireOptionalImport(unittest.TestCase):
                 func()
 
     def test_import_is_cached(self):
-        import_count = {"n": 0}
+        import importlib
 
-        real_import = builtins.__import__
+        probe_count = {"n": 0}
+        real_import_module = importlib.import_module
 
-        def counting_import(name, *args, **kwargs):
+        def counting_import_module(name, *args, **kwargs):
             if name == "json":
-                import_count["n"] += 1
-            return real_import(name, *args, **kwargs)
+                probe_count["n"] += 1
+            return real_import_module(name, *args, **kwargs)
 
         @require_optional_import("json")
         def func():
-            import json
             return 1
 
-        builtins.__import__ = counting_import
+        importlib.import_module = counting_import_module
         try:
             func()
             func()
         finally:
-            builtins.__import__ = real_import
+            importlib.import_module = real_import_module
 
-        # the decorated probe imports once and caches the result
-        self.assertEqual(import_count["n"], 2)
+        # 装饰器仅在首次调用时惰性探测 json，之后命中缓存不再探测
+        self.assertEqual(probe_count["n"], 1)
 
 
 class TestDeprecatedVersion(unittest.TestCase):
@@ -178,6 +179,90 @@ class TestDeprecatedVersion(unittest.TestCase):
         # second call reuses cached state (still runs, still warns)
         with self.assertWarns(DeprecationWarning):
             self.assertEqual(func(), "ok")
+
+
+class TestSingleton(unittest.TestCase):
+    def test_same_args_return_same_instance(self):
+        @singleton
+        class Config(object):
+            def __init__(self, path):
+                self.path = path
+
+        a = Config("/etc/a.conf")
+        b = Config("/etc/a.conf")
+        self.assertIs(a, b)
+        self.assertEqual(a.path, "/etc/a.conf")
+
+    def test_different_args_return_distinct_instances(self):
+        @singleton
+        class Config(object):
+            def __init__(self, path):
+                self.path = path
+
+        a = Config("/etc/a.conf")
+        c = Config("/etc/b.conf")
+        self.assertIsNot(a, c)
+        self.assertEqual(a.path, "/etc/a.conf")
+        self.assertEqual(c.path, "/etc/b.conf")
+
+    def test_kwargs_keyed_separately(self):
+        @singleton
+        class Point(object):
+            def __init__(self, x=0, y=0):
+                self.x = x
+                self.y = y
+
+        p1 = Point(1, y=2)
+        p2 = Point(1, y=2)
+        p3 = Point(1, y=3)
+        p4 = Point(1, 2)
+        p5 = Point(**{"x": 1, "y": 2})
+        p6 = Point(y=2, x=1)
+        self.assertIs(p1, p2)
+        self.assertIs(p1, p4)
+        self.assertIs(p1, p5)
+        self.assertIs(p1, p6)
+        self.assertIsNot(p1, p3)
+        self.assertEqual((p1.x, p1.y), (1, 2))
+        self.assertEqual((p3.x, p3.y), (1, 3))
+
+    def test_init_called_once_per_key(self):
+        calls = {"n": 0}
+
+        @singleton
+        class Counter(object):
+            def __init__(self, tag):
+                calls["n"] += 1
+                self.tag = tag
+
+        Counter("x")
+        Counter("x")
+        self.assertEqual(calls["n"], 1)
+        Counter("y")
+        self.assertEqual(calls["n"], 2)
+
+    def test_init_dict_param(self):
+        @singleton
+        class DictParamClass(object):
+            def __init__(self, tag):
+                self.tag = tag
+
+        d1 = DictParamClass({"x":1})
+        d2 = DictParamClass({"x":1, "y":2})
+        self.assertIsNot(d1, d2)
+
+    def test_init_heterogeneous_param(self):
+        calls = {"n": 0}
+        @singleton
+        class HeterogeneousParamClass(object):
+            def __init__(self, tag):
+                calls["n"] += 1
+                self.tag = tag
+        HeterogeneousParamClass({"x":1})
+        HeterogeneousParamClass(2)
+        HeterogeneousParamClass("3")
+        self.assertEqual(calls["n"], 3)
+
 
 
 if __name__ == "__main__":
