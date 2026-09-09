@@ -19,9 +19,11 @@ setup(
     name='astartool',
     version=get_version(version),
     description=(
-        'toolkit for python'
+        'astartool: a lightweight Python toolkit for data structures, file '
+        'processing, and number/string utilities'
     ),
-    long_description=read_file('description.rst', encoding='utf-8'),
+    long_description=read_file('README.md', encoding='utf-8'),
+    long_description_content_type='text/markdown',
     author='A.Star',
     author_email='astar@snowland.ltd',
     maintainer='A.Star',
@@ -29,7 +31,7 @@ setup(
     license='Apache v2.0',
     packages=find_packages(),
     platforms=["all"],
-    url='https://gitee.com/hoops/astartool',
+    url='https://github.com/astar-club/astartool',
     classifiers=[
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',

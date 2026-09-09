@@ -11,7 +11,7 @@ version_dict = {
     'project_name': 'astartool',
     'api': astartool.__version__,
     '版本': astartool.__version__,
-    '日期': '2026-06-03',
+    '日期': '2026-09-09',
     '授权协议': LICENSE_SHORT[License.APACHE],
     '开发语言': Language.PYTHON.value,
     '操作系统': "跨平台",
@@ -25,20 +25,34 @@ version_dict = {
 content = """
 ### 新增
 
-1. data_structure
+1. project._decorators
 
-(a). relation-新增关系映射，支持有序/无序、加权/非加权
+(a). 新增 singleton 单例类装饰器：按 __init__ 签名归一化 args/kwargs 作为缓存 key，位置参数与关键字参数等价
 
-2. string
+2. file.file_opt
 
-(a). 对正则表达式进行优化
+(a). 新增 read_large_file：按 chunk_size 流式读取并返回生成器，避免一次性载入全部数据
+(b). 新增 write_large_file：接受可迭代对象或单一 str/bytes，按块写出，返回写入字节数
 
-3. setuptool
+### 变更
 
-(a). 由于3.12弃用distutils，因此移除在3.10以上版本_version.py中对distutils的依赖,转而依赖setuptools工具包
+1. file.file_opt
 
+(a). write_file 新增 mode 参数，支持 mode="bytes" 二进制写入
 
+2. project._profiler
+
+(a). do_cprofile 改用 wrapt 嵌套工厂实现
+
+3. project._project
+
+(a). 删除冗余的旧 project2lines.py 模块，功能以 pathlib 版保留在 _project
+
+4. 打包（setup.py）
+
+(a). long_description 改为读取 README.md 并声明 markdown 内容类型
+(b). 短描述改为英文表述
 
 """
 
-version_release_announcement_template(version_dict, content=content, file_name="../docs/release/version_release_v0.2.md")
+version_release_announcement_template(version_dict, content=content, file_name="../docs/release/version_release_v0.4.md")
