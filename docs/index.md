@@ -17,11 +17,21 @@ A.Star私房工具包
 ## [0. 写在最前](home.md)
 ## 1. 函数手册
 
-- [v0.1](api/v0.1.md)
-- [v0.2](api/v0.2.md)
-- [v0.3](api/v0.3.md)
-- [v0.4](api/v0.4.md)
+- [v0_1](api/v0_1.md)
+- [v0_2](api/v0_2.md)
+- [v0_3](api/v0_3.md)
+- [v0_4](api/v0_4.md)
+- [v0_4_1](api/v0_4_1.md)
 
-## 2. 贡献代码
+## 2. 版本发布
+
+- [v0_1_3](release/version_release_v0_1_3.md)
+- [v0_1_4](release/version_release_v0_1_4.md)
+- [v0_2](release/version_release_v0_2.md)
+- [v0_3](release/version_release_v0_3.md)
+- [v0_4](release/version_release_v0_4.md)
+- [v0_4_1](release/version_release_v0_4_1.md)
+
+## 3. 贡献代码
 
 ## 3. 捐赠

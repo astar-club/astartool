@@ -99,7 +99,7 @@ filehelper可选
 
 | 类/函数 | 说明 |
 |---------|------|
-| `std_logging` / `file_logging` | 日志装饰器（标准输出/文件） |
+| `std_logging` / `file_logging` | 日志装饰器（标准输出/文件），支持 `on_enter`/`on_exit` 输出参数（可调用或字符串模板，模板可直接引用函数形参名如 `{x}`） |
 | `cost_time` | 函数耗时统计装饰器 |
 | `do_cprofile` | cProfile性能分析装饰器 |
 | `is_windows` / `is_linux` / `is_64bit` / `is_32bit` | 平台检测 |
