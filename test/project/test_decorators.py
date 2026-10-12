@@ -1,5 +1,7 @@
+import asyncio
 import builtins
 import importlib.util
+import inspect
 import unittest
 import warnings
 
@@ -179,6 +181,106 @@ class TestDeprecatedVersion(unittest.TestCase):
         # second call reuses cached state (still runs, still warns)
         with self.assertWarns(DeprecationWarning):
             self.assertEqual(func(), "ok")
+
+
+class TestAsyncSupport(unittest.TestCase):
+    """装饰器对 async def 函数的支持（同步与异步两种被装饰对象）。"""
+
+    def _run(self, coro):
+        return asyncio.run(coro)
+
+    # ---- require_optional_import ----
+
+    def test_async_imported_package_runs(self):
+        @require_optional_import("json")
+        async def func():
+            import json
+            return json.dumps({"ok": True})
+
+        self.assertTrue(inspect.iscoroutinefunction(func))
+        self.assertEqual(self._run(func()), '{"ok": true}')
+
+    def test_async_missing_package_raises(self):
+        with _ImportBlocker("no_such_module_async"):
+            @require_optional_import("no_such_module_async")
+            async def func():
+                return 1
+
+            with self.assertRaises(ImportError):
+                self._run(func())
+
+    def test_async_custom_exception(self):
+        class MyDepError(RuntimeError):
+            pass
+
+        with _ImportBlocker("no_such_module_async2"):
+            @require_optional_import(
+                "no_such_module_async2", "缺包 {module}", exception=MyDepError
+            )
+            async def func():
+                return 2
+
+            with self.assertRaises(MyDepError):
+                self._run(func())
+
+    def test_async_import_probe_cached(self):
+        probe_count = {"n": 0}
+        real_import_module = importlib.import_module
+
+        def counting_import_module(name, *args, **kwargs):
+            if name == "json":
+                probe_count["n"] += 1
+            return real_import_module(name, *args, **kwargs)
+
+        @require_optional_import("json")
+        async def func():
+            return 1
+
+        importlib.import_module = counting_import_module
+        try:
+            self._run(func())
+            self._run(func())
+        finally:
+            importlib.import_module = real_import_module
+
+        self.assertEqual(probe_count["n"], 1)
+
+    # ---- deprecated_version ----
+
+    def test_async_active_below_interval(self):
+        @deprecated_version((1, 0), (2, 0), current_version=(0, 9))
+        async def func():
+            return "ok"
+
+        self.assertTrue(inspect.iscoroutinefunction(func))
+        self.assertEqual(self._run(func()), "ok")
+
+    def test_async_deprecated_warns_but_runs(self):
+        @deprecated_version((1, 0), (2, 0), current_version=(1, 5))
+        async def func():
+            return "ok"
+
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(self._run(func()), "ok")
+
+    def test_async_removed_raises(self):
+        @deprecated_version((1, 0), (2, 0), current_version=(2, 0))
+        async def func():
+            return "should-not-run"
+
+        with self.assertRaises(VersionDeprecatedError):
+            self._run(func())
+
+    def test_async_exception_raised_at_await_time(self):
+        # 被装饰为异步函数时，未在 await 之前提前调用，异常应在 await 时才抛出
+        @deprecated_version((1, 0), (2, 0), current_version=(2, 0))
+        async def func():
+            return "no"
+
+        coro = func()
+        self.assertTrue(inspect.iscoroutine(coro))
+        with self.assertRaises(VersionDeprecatedError):
+            self._run(coro)
 
 
 class TestSingleton(unittest.TestCase):
