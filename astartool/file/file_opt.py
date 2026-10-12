@@ -7,7 +7,7 @@ from astartool.error import ParameterValueError
 from astartool.file.compresshelper import namelist
 
 
-def read_large_file(file_path: str, chunk_size: int = 8 * 1024 * 1024,
+def read_large_file(file_path: Union[str, Path], chunk_size: int = 8 * 1024 * 1024,
                     mode="str", encoding="utf-8"):
     """流式读取大文件，按分块返回内容，避免一次性将全部数据载入内存。
 
@@ -19,7 +19,7 @@ def read_large_file(file_path: str, chunk_size: int = 8 * 1024 * 1024,
     适用于超大文本/二进制文件的增量处理（如逐块分析、转发），调用方
     通过遍历返回的生成器按需消费数据，无需在内存中持有整份内容。
 
-    :param file_path: 待读取的文件路径。
+    :param file_path: 待读取的文件路径（str 或 pathlib.Path）。
     :param chunk_size: 单次读取的字节数（文本模式下按字符读取同样大小）。
     :param mode: ``"str"`` 按文本读取，其他值（如 ``"bytes"``）按二进制读取。
     :param encoding: 文本模式下的文件编码。
@@ -48,7 +48,7 @@ def read_large_file(file_path: str, chunk_size: int = 8 * 1024 * 1024,
         raise FileOptError("read_error", "Failed to read large file %s: %s" % (p, e))
 
 
-def write_large_file(file_path: str, data, chunk_size: int = 8 * 1024 * 1024,
+def write_large_file(file_path: Union[str, Path], data, chunk_size: int = 8 * 1024 * 1024,
                      mode="str", encoding="utf-8") -> int:
     """流式写入大文件，按分块写入数据，避免一次性持有全部内容。
 
@@ -59,7 +59,7 @@ def write_large_file(file_path: str, data, chunk_size: int = 8 * 1024 * 1024,
 
     适用于超大内容的增量写出（如逐块生成、流式下载落盘）。
 
-    :param file_path: 目标文件路径。
+    :param file_path: 目标文件路径（str 或 pathlib.Path）。
     :param data: 待写入的数据，可为 str/bytes，或产生 str/bytes 的可迭代对象。
     :param chunk_size: 单次写入的字节数（仅当 ``data`` 为单一 str/bytes 时用于分块）。
     :param mode: ``"str"`` 按文本写入，其他值按二进制写入。
@@ -101,11 +101,11 @@ def write_large_file(file_path: str, data, chunk_size: int = 8 * 1024 * 1024,
     return total
 
 
-def read_file(file_path: str, start: str = "0", end: str = "end",
+def read_file(file_path: Union[str, Path], start: str = "0", end: str = "end",
               limit: int = 0, mode="str", encoding="utf-8") -> Union[str, bytes]:
     """Read a text file inside the workspace and return its content.
 
-    :param file_path: Path to the text file to read.
+    :param file_path: Path to the text file to read (str or pathlib.Path).
     :param start: 0-based first line to include (default ``"0"``).
     :param end: 0-based last line (exclusive), or ``"end"`` for the whole tail.
     :param mode: Output content mode; ``"str"`` reads as text (default),
@@ -140,14 +140,14 @@ def read_file(file_path: str, start: str = "0", end: str = "end",
         return lines
 
 
-def write_file(file_path: str, content: Union[str, bytes, bytearray], mode="str", encoding="utf-8") -> int:
+def write_file(file_path: Union[str, Path], content: Union[str, bytes, bytearray], mode="str", encoding="utf-8") -> int:
     """Overwrite a workspace file with ``content`` (full write).
 
     Parent directories are created as needed. ``mode="str"`` 时按文本写入
     （``content`` 应为 ``str``，返回写入字符数）；其他值（如 ``"bytes"``）
     时按二进制写入（``content`` 应为 ``bytes``/``bytearray``，返回写入字节数）。
 
-    :param file_path: Path to the file to write.
+    :param file_path: Path to the file to write (str or pathlib.Path).
     :param content: The full content to write (``str`` in text mode, ``bytes``/``bytearray`` in binary mode).
     :param mode: ``"str"`` 按文本写入，其他值按二进制写入。
     :param encoding: 文本模式下的文件编码。
@@ -173,10 +173,10 @@ def write_file(file_path: str, content: Union[str, bytes, bytearray], mode="str"
         return len(content)
 
 
-def list_dir(path: str = ".") -> list:
+def list_dir(path: Union[str, Path] = ".") -> list:
     """List directory entries (files and subdirs) inside the workspace.
 
-    :param path: The directory path to list.
+    :param path: The directory path to list (str or pathlib.Path).
     :return: A list of ``{"type": "dir"|"file", "name": str}`` dicts sorted by
         name.
     :rtype: list
@@ -190,11 +190,11 @@ def list_dir(path: str = ".") -> list:
     ]
 
 
-def search_content(pattern: str, path: str = ".") -> str:
+def search_content(pattern: str, path: Union[str, Path] = ".") -> str:
     """Grep for a regex pattern under a workspace path.
 
     :param pattern: The regex pattern to search for.
-    :param path: The root path to search under.
+    :param path: The root path to search under (str or pathlib.Path).
     :return: Matches as ``file:line:text`` lines, or ``(no matches)``. Uses
         ripgrep when available and falls back to a pure-Python substring scan
         (capped at 200 matches) otherwise.
@@ -223,13 +223,13 @@ def search_content(pattern: str, path: str = ".") -> str:
         return "\n".join(results[:200]) or "(no matches)"
 
 
-def list_archive(file_path: Union[str | Path], sort: bool = True) -> list:
+def list_archive(file_path: Union[str, Path], sort: bool = True) -> list:
     """List the file entries inside a compressed archive under the workspace.
 
     Supports zip/rar/tar/tar.gz/tar.bz2/tar.xz via astartool's namelist.
     Directories are excluded for tar/rar (only file members are returned).
 
-    :param file_path: Path to the archive file.
+    :param file_path: Path to the archive file (str or pathlib.Path).
     :param sort: Whether to sort the returned entry names.
     :return: The list of archive entry names.
     :rtype: list
@@ -263,7 +263,7 @@ def edit_file(file_path: Union[str, Path], old: Optional[List[str]] = None,
     Passing a ``diff`` payload is intentionally unsupported here; callers that
     need unified-diff application should use a dedicated patch tool instead.
 
-    :param file_path: Path to the file to edit.
+    :param file_path: Path to the file to edit (str or pathlib.Path).
     :param old: List of exact texts to locate and replace. ``None``/empty
         disables replace mode.
     :param new: List of replacement texts, parallel to ``old``.
