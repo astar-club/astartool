@@ -12,6 +12,7 @@ setuptools
 # xlrd              # astartool.file.excelhelper: to_excel (xls reading)
 # openpyxl          # astartool.file.excelhelper: to_excel (.xlsx)
 # pillow            # astartool.file.imagehelper: base64_to_image
+# reportlab         # astartool.project._project: project_to_pdf (软著源代码 PDF 导出)
 
 [optional]
 numpy>=1.0.1
@@ -20,3 +21,4 @@ xlwt
 xlrd
 openpyxl
 pillow
+reportlab
