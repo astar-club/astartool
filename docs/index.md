@@ -22,6 +22,7 @@ A.Star私房工具包
 - [v0_3](api/v0_3.md)
 - [v0_4](api/v0_4.md)
 - [v0_4_1](api/v0_4_1.md)
+- [v0_4_2](api/v0_4_2.md)
 
 ## 2. 版本发布
 
@@ -31,6 +32,7 @@ A.Star私房工具包
 - [v0_3](release/version_release_v0_3.md)
 - [v0_4](release/version_release_v0_4.md)
 - [v0_4_1](release/version_release_v0_4_1.md)
+- [v0_4_2](release/version_release_v0_4_2.md)
 
 ## 3. 贡献代码
 

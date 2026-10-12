@@ -100,10 +100,13 @@ filehelper可选
 | 类/函数 | 说明 |
 |---------|------|
 | `std_logging` / `file_logging` | 日志装饰器（标准输出/文件），支持 `on_enter`/`on_exit` 输出参数（可调用或字符串模板，模板可直接引用函数形参名如 `{x}`） |
+| `deprecated_version` / `require_optional_import` | 版本过期提示 / 可选依赖惰性导入装饰器，同步与异步函数均支持 |
+| `singleton` | 单例类装饰器（按 `__init__` 签名归一化缓存 key） |
 | `cost_time` | 函数耗时统计装饰器 |
 | `do_cprofile` | cProfile性能分析装饰器 |
 | `is_windows` / `is_linux` / `is_64bit` / `is_32bit` | 平台检测 |
-| `project_to_lines` / `walk` | 项目文件遍历导出（软著申请用） |
+| `project_to_lines` / `walk` | 项目文件遍历导出（软著申请用，自动压缩连续空行，返回文件数/源码总行数统计） |
+| `project_to_pdf` | 软著用源代码 PDF 导出（完整版 + 超过 60 页时前后各 30 页提交版，需可选依赖 reportlab） |
 | `model_to_doc` / `model_to_dict` | Django模型文档生成 |
 | `url_to_interface_template` | Django接口模板生成 |
 | `auto_title` | 文档头自动生成（支持md/rst） |
