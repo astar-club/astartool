@@ -114,3 +114,4 @@ venv.bak/
 *.tar.xz
 *.rar
 ./docs/version_release.md
+softcopyright/
