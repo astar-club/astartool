@@ -406,7 +406,10 @@ def file_to_lines(src_file,
     """
     src_path = Path(src_file)
     to_path = Path(to_file)
-    with to_path.open('a+', encoding='utf-8') as outfile:
+    # newline=''：写入时不转换换行符。若用默认文本模式，Windows 上会把内容
+    # 中的 '\n' 转成 '\r\n'，使 CRLF 源码变成 '\r\r\n'，读回时被拆成两行，
+    # 导致每个源码行后多出一个空行（行数翻倍）。
+    with to_path.open('a+', encoding='utf-8', newline='') as outfile:
         raw = src_path.read_bytes()
         try:
             lines = raw.decode('gbk')
@@ -415,6 +418,8 @@ def file_to_lines(src_file,
                 lines = raw.decode('utf-8')
             except UnicodeError:
                 return 0
+        # 统一换行符为 '\n'，避免混合 CRLF/LF 在后续读取时行数口径不一致
+        lines = lines.replace('\r\n', '\n').replace('\r', '\n')
         outfile.write(str(src_path))
         outfile.write('\n')
         outfile.write(start_file)
@@ -511,7 +516,7 @@ def _compress_blank_lines_in_file(file_path, max_blank=1, encoding='utf-8'):
     while compressed and compressed[-1].strip() == '':
         compressed.pop()
 
-    with path.open('w', encoding=encoding) as f:
+    with path.open('w', encoding=encoding, newline='') as f:
         f.write('\n'.join(compressed))
         if compressed:
             f.write('\n')

@@ -1,3 +1,4 @@
+import math
 import tempfile
 import unittest
 from pathlib import Path
@@ -35,7 +36,10 @@ class ProjectTestCase(unittest.TestCase):
         if isinstance(content, bytes):
             path.write_bytes(content)
         else:
-            path.write_text(content, encoding='utf-8')
+            # newline=''：原样写入，避免文本模式把 '\n' 转成 '\r\n'
+            # 而破坏 CRLF 测试内容（'\r\n' 会变成 '\r\r\n'）
+            with open(path, 'w', encoding='utf-8', newline='') as f:
+                f.write(content)
         return path
 
 
@@ -45,6 +49,28 @@ class TestFileToLines(ProjectTestCase):
         out = self.root / 'out.txt'
         count = file_to_lines(src, to_file=str(out))
         self.assertEqual(count, 3)
+
+    def test_crlf_source_no_double_lines(self):
+        # CRLF 源码不应因文本模式写入的换行转换导致行数翻倍
+        # （Windows 上 '\n' 被转成 '\r\n'，使 '\r\n' 变 '\r\r\n'，
+        #  读回时每个源码行后多出一个空行）
+        src = self.write('crlf.py', 'a\r\nb\r\nc\r\n')
+        out = self.root / 'out.txt'
+        count = file_to_lines(src, to_file=out)
+        self.assertEqual(count, 3)
+        # 1 路径行 + 1 文件头空行 + 3 源码行 + 1 文件尾空行
+        txt = out.read_text(encoding='utf-8').splitlines()
+        self.assertEqual(len(txt), 6)
+        self.assertEqual(txt[2:5], ['a', 'b', 'c'])
+
+    def test_mixed_newlines_normalized(self):
+        # CR / CRLF / LF 混用的源码统一按 LF 口径计数
+        src = self.write('mixed.py', 'a\r\nb\rc\nd\r\n')
+        out = self.root / 'out.txt'
+        count = file_to_lines(src, to_file=out)
+        self.assertEqual(count, 4)
+        txt = out.read_text(encoding='utf-8').splitlines()
+        self.assertEqual(txt[2:6], ['a', 'b', 'c', 'd'])
 
     def test_returns_zero_for_binary_file(self):
         src = self.root / 'bin.py'
@@ -393,6 +419,97 @@ class TestProjectToPdf(ProjectTestCase):
         self.assertEqual(info['source_lines'], 0)
         self.assertEqual(info['txt'].read_text(encoding='utf-8'), 'old txt\n')
         self.assertFalse((out_dir / 'source_code.pdf').exists())
+
+
+@unittest.skipUnless(HAS_REPORTLAB, 'reportlab not installed')
+class TestSelfSoftCopyright(ProjectTestCase):
+    """自举测试：对 astartool 包自身调用 project_to_pdf 生成软著材料。"""
+
+    LINES_PER_PAGE = 50
+    KEEP_PAGES = 30
+    MAX_PAGES = 60
+
+    def _source_root(self):
+        # test/project/test_project.py -> 仓库根 -> astartool 包目录
+        return Path(__file__).resolve().parents[2] / 'astartool'
+
+    def _collect_expected_files(self, src):
+        return [p for p in src.rglob('*.py') if '__pycache__' not in p.parts]
+
+    def test_self_project_to_pdf(self):
+        src = self._source_root()
+        self.assertTrue(src.is_dir(),
+                        'astartool package dir not found: %s' % src)
+        expected_files = self._collect_expected_files(src)
+        self.assertGreater(len(expected_files), 0)
+
+        out_dir = self.root / 'softcopyright'
+        info = project_to_pdf(
+            src_project=src,
+            to_dir=out_dir,
+            software_name='astartool',
+            version=(0, 4, 2, 'final', 0),
+        )
+
+        # ---- 产物存在且为有效 PDF ----
+        self.assertTrue(info['txt'].exists())
+        self.assertTrue(info['pdf'].exists())
+        with info['pdf'].open('rb') as f:
+            self.assertTrue(f.read(5).startswith(b'%PDF'))
+
+        # ---- 遍历完整：文件数与源码目录中的 .py 数量一致 ----
+        self.assertEqual(info['file_count'], len(expected_files))
+        self.assertGreater(info['source_lines'], 0)
+
+        # ---- 分页正确：总页数 = txt 行数 / 每页行数 向上取整 ----
+        txt_lines = info['txt'].read_text(encoding='utf-8').splitlines()
+        self.assertEqual(
+            info['total_pages'],
+            math.ceil(len(txt_lines) / self.LINES_PER_PAGE))
+
+        # ---- 空行已压缩：无连续空行、无首尾空行 ----
+        for prev, cur in zip(txt_lines, txt_lines[1:]):
+            self.assertFalse(
+                prev.strip() == '' and cur.strip() == '',
+                'consecutive blank lines in exported txt')
+        self.assertNotEqual(txt_lines[0].strip(), '')
+        self.assertNotEqual(txt_lines[-1].strip(), '')
+
+        # ---- 软著要求：超过 60 页输出前 30 页 + 后 30 页提交版 ----
+        if info['total_pages'] > self.MAX_PAGES:
+            self.assertIsNotNone(info['pdf_part'])
+            self.assertTrue(info['pdf_part'].exists())
+            self.assertEqual(info['part_pages'],
+                             self.KEEP_PAGES * 2)
+            self.assertIn('head30_tail30', info['pdf_part'].name)
+            with info['pdf_part'].open('rb') as f:
+                self.assertTrue(f.read(5).startswith(b'%PDF'))
+        else:
+            self.assertIsNone(info['pdf_part'])
+            self.assertEqual(info['part_pages'], info['total_pages'])
+
+        # ---- 源码文本以第一个文件的路径分隔行开头 ----
+        self.assertTrue(txt_lines[0].endswith('.py'))
+
+    def test_self_project_to_lines_only(self):
+        # 仅拼接文本（不渲染 PDF），验证空行压缩与统计
+        src = self._source_root()
+        expected_files = self._collect_expected_files(src)
+        out_txt = self.root / 'self_source.txt'
+        stats = project_to_lines(src_project=src, to_file=out_txt)
+        self.assertEqual(stats['file_count'], len(expected_files))
+        self.assertGreater(stats['source_lines'], 0)
+        lines = out_txt.read_text(encoding='utf-8').splitlines()
+        for prev, cur in zip(lines, lines[1:]):
+            self.assertFalse(prev.strip() == '' and cur.strip() == '')
+        # 路径分隔行数等于源码文件数（project_to_lines 写入的路径行为
+        # 绝对路径且真实存在，据此与源码内容行区分）
+        header_lines = []
+        for ln in lines:
+            p = Path(ln.strip())
+            if p.is_absolute() and p.is_file():
+                header_lines.append(ln)
+        self.assertEqual(len(header_lines), len(expected_files))
 
 
 if __name__ == '__main__':
