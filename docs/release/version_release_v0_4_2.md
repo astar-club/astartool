@@ -30,9 +30,19 @@ PDF 能力，装饰器支持异步函数。
     版），不再静默覆盖；确认删除但文件被占用时降级为时间戳文件名。
 - `astartool.project._project.project_to_lines` 新增 `compress_blank` /
   `max_blank` 参数（默认开启）：压缩拼接结果中的连续空行（保留至多 1 行）并
-  去掉首尾空行，解决源码拼接时文件头尾附加空行导致中间空行过多的问题；
-  返回值由 `None` 改为统计字典 `{"file_count", "source_lines"}`。
-  `file_to_lines` / `walk` 同步返回源码行数统计。
+  去掉首尾空行；返回值由 `None` 改为统计字典
+  `{"file_count", "source_lines"}`。`file_to_lines` / `walk` 同步返回源码行数
+  统计。
+
+### 修复
+
+- `astartool.project._project.file_to_lines` 修复 CRLF 源码换行翻倍导致导出
+  空行过多的问题：此前以默认文本模式写入目标文件，Windows 上内容中的 `\n`
+  被转换成 `\r\n`，使 CRLF 换行的源码变成 `\r\r\n`，读回时被拆成两行，每个
+  源码行后都多出一个空行（astartool 自身导出时 txt 行数由 5329 涨到 9121、
+  PDF 由 107 页涨到 183 页，过半页面被空行占据）。现写入时禁用换行转换
+  （`newline=''`）并统一源码换行为 `\n`。这也是「软著导出中间空行太多」
+  反馈的真正根因（连续空行压缩对隔行空行无效）。
 - `astartool.project._decorators.deprecated_version` /
   `require_optional_import` 支持同步与异步两种函数：装饰 `async def` 函数时
   返回的仍是协程函数，版本校验 / 依赖探测在 `await` 执行时进行。
@@ -47,6 +57,8 @@ PDF 能力，装饰器支持异步函数。
 - `project_to_lines` 不传新参数时默认压缩空行（视觉变化，非接口破坏）；传
   `compress_blank=False` 可完全保留旧行为；旧调用方不接收返回值，不受影响。
 - `file_to_lines` / `walk` 的返回值由调用方自行决定是否使用，不影响既有调用。
+- 换行修复仅改变 CRLF 源码的导出行数（修复前被多余空行撑大），LF 源码不受
+  影响；接口与参数不变。
 
 ### 示例
 
